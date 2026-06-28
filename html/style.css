@@ -1,0 +1,487 @@
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Zen Kaku Gothic New', 'Segoe UI', sans-serif;
+  background: transparent;
+  color: #1c1b19;
+}
+
+.hidden { display: none !important; }
+
+/* ============================================================
+   #app ? 中古車在庫管理（iPad 風タブレット UI / ダーク）
+   ============================================================ */
+/* 共通ボタンベース（#app / #shopApp 両方で使う） */
+.btn {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  background-clip: padding-box;
+}
+
+:root {
+  --tab-bg:      #0e0d11;   /* 筐体ベゼル */
+  --tab-screen:  #1b1a20;   /* 画面側パネル */
+  --tab-surface: #26252d;   /* カード面 */
+  --tab-text:    #f0eee8;
+  --tab-sub:     #8c8a92;
+  --tab-border:  #34333c;
+  --tab-accent:  #e08a3c;   /* 値札オレンジ */
+  --tab-accent-soft: #3a2c1a;
+  --tab-danger:  #d4554f;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, .6);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+}
+
+/* 物理タブレット筐体（大型・固定サイズ・四方ベゼルのみ） */
+#app .modal {
+  background: var(--tab-bg);
+  border-radius: 40px;
+  width: 980px;
+  height: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 18px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.04) inset,
+    0 40px 80px rgba(0,0,0,.6);
+}
+
+/* 画面（ベゼルの内側） */
+#app .modal-header,
+#app .tabs,
+#app .tab-content {
+  background: var(--tab-screen);
+}
+
+#app .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 26px 12px;
+  border-radius: 24px 24px 0 0;
+}
+
+#app .logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--tab-text);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  letter-spacing: .02em;
+}
+#app .logo::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tab-accent);
+  box-shadow: 0 0 0 4px var(--tab-accent-soft);
+}
+
+#app .btn-close {
+  background: var(--tab-surface);
+  border: 1px solid var(--tab-border);
+  color: var(--tab-sub);
+  font-size: .9rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .15s;
+}
+#app .btn-close:hover { background: var(--tab-danger); border-color: var(--tab-danger); color: #fff; }
+
+/* セグメントコントロール風タブ */
+#app .tabs {
+  display: flex;
+  gap: 8px;
+  padding: 14px 26px 18px;
+}
+#app .tab {
+  flex: 1;
+  padding: 11px 14px;
+  background: var(--tab-surface);
+  border: 1px solid var(--tab-border);
+  border-radius: 12px;
+  color: var(--tab-sub);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .88rem;
+  font-weight: 500;
+  transition: .15s;
+}
+#app .tab:hover  { border-color: var(--tab-accent); color: var(--tab-text); }
+#app .tab.active {
+  background: var(--tab-accent);
+  border-color: var(--tab-accent);
+  color: #1b1308;
+  font-weight: 700;
+}
+
+#app .tab-content {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 26px 26px;
+  border-radius: 0 0 24px 24px;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.025) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+/* テーブル ? カード型行 */
+#app table { width: 100%; border-collapse: separate; border-spacing: 0 10px; font-size: .88rem; }
+#app thead { display: none; }
+#app tbody tr {
+  background: var(--tab-surface);
+  box-shadow: 0 1px 0 rgba(255,255,255,.03) inset;
+}
+#app tbody tr td:first-child { border-radius: 14px 0 0 14px; }
+#app tbody tr td:last-child  { border-radius: 0 14px 14px 0; }
+#app td {
+  padding: 16px 18px;
+  color: var(--tab-text);
+  border: none;
+  vertical-align: middle;
+}
+#app td:empty::before { content: '?'; color: var(--tab-sub); }
+
+/* 空状態（在庫なし／出品中の車両なし） */
+#app .empty-row td {
+  text-align: center;
+  color: var(--tab-sub) !important;
+  padding: 48px 18px !important;
+  font-size: .84rem;
+  letter-spacing: .04em;
+  border-radius: 14px !important;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent, transparent 9px,
+    rgba(255,255,255,.018) 9px, rgba(255,255,255,.018) 10px
+  );
+}
+
+/* 1列目=ナンバー(等幅) */
+#app tbody td:nth-child(1) {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 700;
+  color: var(--tab-sub);
+  font-size: .82rem;
+  letter-spacing: .03em;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 99px;
+  font-size: .76rem;
+  font-weight: 700;
+}
+.badge-stock  { background: #1f2c38; color: #7fb3da; }
+.badge-listed { background: var(--tab-accent-soft); color: var(--tab-accent); }
+
+/* ボタン */
+#app .btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 700;
+  margin-right: 4px;
+  transition: .15s;
+}
+#app .btn-primary { background: var(--tab-accent); color: #1b1308; }
+#app .btn-primary:hover { background: #f29c52; }
+#app .btn-danger  { background: #3a2424; color: var(--tab-danger); }
+#app .btn-danger:hover  { background: var(--tab-danger); color: #fff; }
+#app .btn-ghost   { background: var(--tab-surface); color: var(--tab-sub); border: 1px solid var(--tab-border); }
+#app .btn-ghost:hover { border-color: var(--tab-sub); color: var(--tab-text); }
+
+/* 価格入力モーダル（タブレットのトーンに合わせる） */
+#priceModal .price-box {
+  background: var(--tab-screen);
+  border: 1px solid var(--tab-border);
+  border-radius: 22px;
+  padding: 30px 32px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 24px 48px rgba(0,0,0,.5);
+}
+#priceModal .price-box h3 { color: var(--tab-text); margin-bottom: 6px; font-size: 1.05rem; }
+#priceModal .price-box p  { color: var(--tab-sub); font-size: .85rem; margin-bottom: 16px; }
+#priceModal #priceInput {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--tab-border);
+  background: var(--tab-surface);
+  color: var(--tab-text);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1rem;
+  margin-bottom: 16px;
+  outline: none;
+}
+#priceModal #priceInput:focus { border-color: var(--tab-accent); }
+#priceModal .btn-primary { background: var(--tab-accent); color: #1b1308; }
+#priceModal .btn-primary:hover { background: #f29c52; }
+#priceModal .btn-ghost { background: var(--tab-surface); color: var(--tab-sub); border: 1px solid var(--tab-border); }
+
+/* ============================================================
+   #shopApp ? ショールーム型購入UI（中央は透明＝ゲーム内3D表示）
+   ============================================================ */
+
+:root {
+  --show-bg:     rgba(15, 14, 18, .95);
+  --show-panel:  rgba(22, 21, 27, .92);
+  --show-text:   #f0eee8;
+  --show-sub:    #9b98a0;
+  --show-accent: #e08a3c;
+  --show-border: rgba(255,255,255,.08);
+}
+
+#shopApp {
+  position: fixed;
+  inset: 0;
+  background: transparent; /* ゲーム画面（カメラ）を透過させる */
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  pointer-events: none;
+}
+#shopApp * { pointer-events: auto; }
+
+/* 退出ボタン（左上） */
+.showroom-exit {
+  position: absolute;
+  top: 40px;
+  left: 28px;
+  background: var(--show-panel);
+  border: 1px solid var(--show-border);
+  color: var(--show-text);
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: .15s;
+}
+.showroom-exit:hover { border-color: var(--show-accent); color: var(--show-accent); }
+
+/* 左：在庫リスト */
+.showroom-list {
+  position: absolute;
+  top: 28px;
+  bottom: 60px;
+  left: 28px;
+  width: 320px;
+  margin-top: 64px; /* 退出ボタン分のオフセット */
+  background: var(--show-bg);
+  border: 1px solid var(--show-border);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.showroom-list-header {
+  padding: 16px 20px;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--show-sub);
+  letter-spacing: .08em;
+  border-bottom: 1px solid var(--show-border);
+}
+.showroom-list-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.showroom-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: .12s;
+  border: 1px solid transparent;
+}
+.showroom-item:hover { background: rgba(255,255,255,.04); }
+.showroom-item.active {
+  background: rgba(224,138,60,.12);
+  border-color: var(--show-accent);
+}
+.showroom-item-name {
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--show-text);
+  margin-bottom: 4px;
+}
+.showroom-item-price {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--show-accent);
+}
+.showroom-empty {
+  text-align: center;
+  color: var(--show-sub);
+  padding: 40px 12px;
+  font-size: .85rem;
+}
+
+/* 右：選択中の車両 詳細パネル */
+.showroom-detail {
+  position: absolute;
+  top: 80px;
+  right: 28px;
+  width: 320px;
+  background: var(--show-bg);
+  border: 1px solid var(--show-border);
+  border-radius: 18px;
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.showroom-detail-brand {
+  font-size: .8rem;
+  color: var(--show-sub);
+  letter-spacing: .06em;
+  margin-bottom: 4px;
+}
+.showroom-detail-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--show-text);
+  margin-bottom: 14px;
+  line-height: 1.3;
+}
+.showroom-detail-plate {
+  display: inline-block;
+  font-family: 'Roboto Mono', monospace;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--show-sub);
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--show-border);
+  padding: 5px 12px;
+  border-radius: 8px;
+  letter-spacing: .04em;
+  margin-bottom: 18px;
+  width: fit-content;
+}
+.showroom-detail-price {
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: var(--show-accent);
+  margin: 0 0 16px;
+}
+.showroom-detail-actions {
+  margin-top: auto;
+}
+.showroom-detail-actions .btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  font-size: .9rem;
+  border-radius: 14px;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+}
+/* 支払い選択モーダル（ショールームのトーンに合わせる） */
+#paymentModal .price-box {
+  background: var(--show-panel);
+  border: 1px solid var(--show-border);
+  border-radius: 18px;
+  padding: 28px 32px;
+  width: 320px;
+  text-align: center;
+}
+#paymentModal .price-box h3 { color: var(--show-text); margin-bottom: 8px; }
+#paymentModal .price-box p  { color: var(--show-sub); font-size: .88rem; margin-bottom: 14px; }
+#paymentModal .btn-primary { background: var(--show-accent); color: #1b1308; font-weight: 700; }
+#paymentModal .btn-primary:hover { background: #f29c52; }
+#paymentModal .btn-ghost { background: rgba(255,255,255,.06); color: var(--show-sub); border: 1px solid var(--show-border); }
+
+.payment-box {
+  width: 360px;
+}
+
+.payment-options {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0 14px;
+}
+
+.payment-option {
+  flex: 1;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--show-border);
+  border-radius: 14px;
+  padding: 22px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: .15s;
+}
+.payment-option:hover {
+  border-color: var(--show-accent);
+  background: rgba(224,138,60,.1);
+}
+.payment-option-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--show-sub);
+  transition: color .15s;
+}
+.payment-option-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.payment-option:hover .payment-option-icon {
+  color: var(--show-accent);
+}
+.payment-option-label {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--show-text);
+}
+
+.payment-cancel {
+  width: 100%;
+  padding: 13px;
+  font-size: .88rem;
+  border-radius: 12px;
+}
+
+/* 共通オーバーレイ・アクション行 */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.7);
+  z-index: 99;
+}
+.price-actions { display: flex; gap: 8px; justify-content: center; }

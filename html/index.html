@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Used Car Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app" class="hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="logo">🚗 中古車在庫管理</span>
+        <button id="btnClose" class="btn-close">✕</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-tab="stock">在庫一覧</button>
+        <button class="tab"        data-tab="listed">出品中</button>
+        <button class="tab"        data-tab="history">販売履歴</button>
+      </div>
+      <!-- 在庫一覧（未出品） -->
+      <div id="tab-stock" class="tab-content">
+        <table>
+          <thead>
+            <tr>
+              <th>ナンバー</th><th>車種</th><th>価格設定</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="stockBody"></tbody>
+        </table>
+      </div>
+      <!-- 出品中 -->
+      <div id="tab-listed" class="tab-content hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>ナンバー</th><th>車種</th><th>価格</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="listedBody"></tbody>
+        </table>
+      </div>
+      <!-- 販売履歴 -->
+      <div id="tab-history" class="tab-content hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>ナンバー</th><th>車種</th><th>出品者</th><th>販売価格</th><th>販売日時</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 価格入力モーダル -->
+  <div id="priceModal" class="overlay hidden">
+    <div class="price-box">
+      <h3>価格を設定</h3>
+      <p id="priceLabel"></p>
+      <p id="priceBuyAmount"></p>
+      <input id="priceInput" type="number" min="1" placeholder="$ 価格を入力" />
+      <div class="price-actions">
+        <button id="btnPriceConfirm" class="btn btn-primary">出品する</button>
+        <button id="btnPriceCancel"  class="btn btn-ghost">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 購入ショールームUI（左:リスト / 右:詳細パネル / 中央:ゲーム内3D表示） -->
+  <div id="shopApp" class="hidden">
+    <button id="btnShopClose" class="showroom-exit">↩ ショールームを出る</button>
+
+    <div class="showroom-list">
+      <div class="showroom-list-header">在庫車両</div>
+      <div id="shopList" class="showroom-list-body"></div>
+    </div>
+
+    <div id="showroomDetail" class="showroom-detail hidden">
+      <div class="showroom-detail-name" id="detailName"></div>
+      <div class="showroom-detail-plate" id="detailPlate"></div>
+      <div class="showroom-detail-price" id="detailPrice"></div>
+      <div class="showroom-detail-actions">
+        <button id="btnPurchaseOpen" class="btn btn-primary">購入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 支払い選択モーダル -->
+  <div id="paymentModal" class="overlay hidden">
+    <div class="price-box payment-box">
+      <h3>支払い方法を選択</h3>
+      <p id="paymentLabel"></p>
+      <div class="payment-options">
+        <button id="btnPayBank" class="payment-option">
+          <span class="payment-option-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 12C2 8.22876 2 6.34315 3.17157 5.17157C4.34315 4 6.22876 4 10 4H14C17.7712 4 19.6569 4 20.8284 5.17157C22 6.34315 22 8.22876 22 12C22 15.7712 22 17.6569 20.8284 18.8284C19.6569 20 17.7712 20 14 20H10C6.22876 20 4.34315 20 3.17157 18.8284C2 17.6569 2 15.7712 2 12Z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M10 16.5H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M8 13.5H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M2 10L22 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M14 15C14 14.0572 14 13.5858 14.2929 13.2929C14.5858 13 15.0572 13 16 13C16.9428 13 17.4142 13 17.7071 13.2929C18 13.5858 18 14.0572 18 15C18 15.9428 18 16.4142 17.7071 16.7071C17.4142 17 16.9428 17 16 17C15.0572 17 14.5858 17 14.2929 16.7071C14 16.4142 14 15.9428 14 15Z" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </span>
+          <span class="payment-option-label">銀行</span>
+        </button>
+        <button id="btnPayCash" class="payment-option">
+          <span class="payment-option-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 13C7 11.1144 7 10.1716 7.58579 9.58579C8.17157 9 9.11438 9 11 9H14H17C18.8856 9 19.8284 9 20.4142 9.58579C21 10.1716 21 11.1144 21 13V14V15C21 16.8856 21 17.8284 20.4142 18.4142C19.8284 19 18.8856 19 17 19H14H11C9.11438 19 8.17157 19 7.58579 18.4142C7 17.8284 7 16.8856 7 15V14V13Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M7 15V15C5.11438 15 4.17157 15 3.58579 14.4142C3.58579 14.4142 3.58579 14.4142 3.58579 14.4142C3 13.8284 3 12.8856 3 11L3 9C3 7.11438 3 6.17157 3.58579 5.58579C4.17157 5 5.11438 5 7 5L13 5C14.8856 5 15.8284 5 16.4142 5.58579C17 6.17157 17 7.11438 17 9V9" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M16 14C16 15.1046 15.1046 16 14 16C12.8954 16 12 15.1046 12 14C12 12.8954 12.8954 12 14 12C15.1046 12 16 12.8954 16 14Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </span>
+          <span class="payment-option-label">現金</span>
+        </button>
+      </div>
+      <button id="btnPayCancel" class="btn btn-ghost payment-cancel">キャンセル</button>
+    </div>
+</div>
+  <script src="app.js"></script>
+</body>
+</html>
